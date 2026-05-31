@@ -6,7 +6,7 @@ const PURPOSE_OPTIONS = [
   'イベント・告知したい', '一度見た人に再アプローチ', 'ブランドイメージを上げたい',
 ]
 const PLACEMENT_OPTIONS = [
-  'Instagram', 'Facebook広告', 'Google広告', '自社サイト・LP', 'LINE', 'X（Twitter）', 'YouTube',
+  'Instagram', 'LINE', 'X（Twitter）', 'チラシ・印刷物',
 ]
 const MOOD_OPTIONS = [
   'シンプル・すっきり', '高級感・おしゃれ', '親しみやすい・やさしい', '力強い・インパクト重視', 'ナチュラル・やわらか',
@@ -20,7 +20,7 @@ const TEXT_STYLE_OPTIONS = [
 const PERSON_OPTIONS = ['入れる（男性）', '入れる（女性）', '入れる（性別問わず）', '入れない', 'AIにおまかせ']
 
 const INIT = {
-  purpose: [], placement: [], size: '', format: 'PNG',
+  purpose: [], placement: [], size: '', format: 'PNG（画質重視・SNSやWeb向け）',
   productName: '', serviceDescription: '', benefits: '', priceInfo: '',
   targetAge: '', targetProblem: '', desiredFeeling: '',
   aiCopy: false, catchphrase: '', subcopy: '', cta: '', requiredText: '',
@@ -155,23 +155,39 @@ function Chips({ options, selected, onToggle }) {
 }
 
 function Step1({ f, set }) {
+  const PLACEMENT_SIZE = {
+    'Instagram': '正方形：1080px ×1350px',
+    'LINE': '縦長：1080px × 1920px',
+    'X（Twitter）': '横長：1200px × 675px',
+    'チラシ・印刷物': 'A4サイズ（210mm × 297mm）',
+  }
+
+  const handlePlacementToggle = (v) => {
+    const newPlacement = single(f.placement, v)
+    const newSize = newPlacement.length > 0 ? (PLACEMENT_SIZE[newPlacement[0]] ?? '') : ''
+    set({ placement: newPlacement, size: newSize })
+  }
+
   return (
     <div className="fields">
-      <Field label="デザインの目的" required>
+      <Field label="このデザインで何をしたいですか？" required>
         <Chips options={PURPOSE_OPTIONS} selected={f.purpose} onToggle={v => set({ purpose: single(f.purpose, v) })} />
       </Field>
-      <Field label="掲載場所" required>
-        <Chips options={PLACEMENT_OPTIONS} selected={f.placement} onToggle={v => set({ placement: single(f.placement, v) })} />
+      <Field label="どこに載せますか？" required>
+        <Chips options={PLACEMENT_OPTIONS} selected={f.placement} onToggle={handlePlacementToggle} />
       </Field>
       <Field label="デザインのサイズ">
         <input className="inp" type="text" placeholder="例：縦1080px　横1080px" value={f.size} onChange={e => set({ size: e.target.value })} />
       </Field>
       <Field label="ファイル形式">
         <select className="sel" value={f.format} onChange={e => set({ format: e.target.value })}>
-          <option>PNG</option>
-          <option>JPG</option>
-          <option value="どちらでもOK">どちらでもOK</option>
+          <option>PNG（画質重視・SNSやWeb向け）</option>
+          <option>JPG（データ軽量・メール添付向け）</option>
+          <option>PDF（印刷・チラシ向け）</option>
         </select>
+        <p style={{fontSize: '13px', color: '#8B6F5E', marginTop: '8px', lineHeight: '1.6', padding: '10px 12px', background: '#FFF0E8', borderRadius: '8px', borderLeft: '3px solid #FF9969'}}>
+          💡 迷ったらSNS・Webは「PNG」、印刷・チラシは「PDF」がおすすめです
+        </p>
       </Field>
     </div>
   )
@@ -181,24 +197,24 @@ function Step2({ f, set }) {
   return (
     <div className="fields">
       <Field label="商品名・サービス名" required>
-        <input className="inp" type="text" placeholder="例：美肌コスメ「ルミナ」" value={f.productName} onChange={e => set({ productName: e.target.value })} />
+        <input className="inp" type="text" placeholder="例：鈴木整骨院・ハンドメイドアクセサリーBOXY" value={f.productName} onChange={e => set({ productName: e.target.value })} />
       </Field>
-      <Field label="どんなサービスか一言で" required>
+      <Field label="どんなお店・サービスですか？（一言で）" required>
         <input className="inp" type="text" placeholder="例：毎日使える保湿スキンケアセット" value={f.serviceDescription} onChange={e => set({ serviceDescription: e.target.value })} />
       </Field>
-      <Field label="使うとどんないいことがある？" required>
+      <Field label="お客さんにどんないいことがありますか？" required>
         <textarea className="inp ta" rows={3} placeholder="例：乾燥が改善され、肌がもちもちになる。毎朝のスキンケアが楽しくなる" value={f.benefits} onChange={e => set({ benefits: e.target.value })} />
       </Field>
-      <Field label="価格・実績・キャンペーン">
+      <Field label="価格・実績・キャンペーン（あれば）">
         <input className="inp" type="text" placeholder="例：初回限定50%OFF・累計10万個販売" value={f.priceInfo} onChange={e => set({ priceInfo: e.target.value })} />
       </Field>
-      <Field label="ターゲットの年齢・性別" required>
+      <Field label="どんな人に届けたいですか？（年齢・性別など）" required>
         <input className="inp" type="text" placeholder="例：30〜40代女性" value={f.targetAge} onChange={e => set({ targetAge: e.target.value })} />
       </Field>
-      <Field label="ターゲットの悩み" required>
+      <Field label="その人はどんな悩みを持っていますか？" required>
         <input className="inp" type="text" placeholder="例：乾燥・毛穴の開き・くすみが気になる" value={f.targetProblem} onChange={e => set({ targetProblem: e.target.value })} />
       </Field>
-      <Field label="感じてほしい気持ち">
+      <Field label="デザインを見た人にどう感じてほしいですか？（任意）">
         <input className="inp" type="text" placeholder="例：試してみたい！自分も使えばよかった" value={f.desiredFeeling} onChange={e => set({ desiredFeeling: e.target.value })} />
       </Field>
     </div>
@@ -208,7 +224,7 @@ function Step2({ f, set }) {
 function Step3({ f, set }) {
   return (
     <div className="fields">
-      <Field label="コピーをAIにおまかせ" hint="オンにするとキャッチコピーとサブコピーをAIが生成します">
+      <Field label="文章はAIに考えてもらう" hint="オンにするとキャッチコピーとサブコピーをAIが生成します">
         <div className="toggle-row">
           <span className="toggle-lbl">{f.aiCopy ? 'AIにおまかせ（ON）' : '自分で入力する'}</span>
           <button
@@ -221,22 +237,22 @@ function Step3({ f, set }) {
           </button>
         </div>
       </Field>
-      <Field label="キャッチコピー" required={!f.aiCopy}>
+      <Field label="一番大きく載せたい言葉（キャッチコピー）" required={!f.aiCopy}>
         <input className="inp" type="text"
           placeholder={f.aiCopy ? 'AIが生成します' : '例：乾燥に悩む肌へ、ひとつの答え。'}
           value={f.catchphrase} disabled={f.aiCopy}
           onChange={e => set({ catchphrase: e.target.value })} />
       </Field>
-      <Field label="サブコピー">
+      <Field label="その下に載せる補足の言葉（任意）">
         <input className="inp" type="text"
           placeholder={f.aiCopy ? 'AIが生成します' : '例：365日、うるおいつづく処方。'}
           value={f.subcopy} disabled={f.aiCopy}
           onChange={e => set({ subcopy: e.target.value })} />
       </Field>
-      <Field label="CTAの文言" required>
+      <Field label="行動を促す言葉（例：今すぐ予約・詳しくはこちら）" required>
         <input className="inp" type="text" placeholder="例：今すぐ試す・詳しくはこちら・無料で相談する" value={f.cta} onChange={e => set({ cta: e.target.value })} />
       </Field>
-      <Field label="必ず入れたいテキスト">
+      <Field label="必ず載せたい情報（住所・電話番号など）（任意）">
         <input className="inp" type="text" placeholder="例：公式サイトURL・ハッシュタグ・注意書き" value={f.requiredText} onChange={e => set({ requiredText: e.target.value })} />
       </Field>
     </div>
@@ -254,19 +270,19 @@ function Step4({ f, set, onGenerate, prompt, canGen }) {
 
   return (
     <div className="fields">
-      <Field label="デザインの雰囲気" required>
+      <Field label="どんな雰囲気にしたいですか？" required>
         <Chips options={MOOD_OPTIONS} selected={f.mood} onToggle={v => set({ mood: single(f.mood, v) })} />
       </Field>
-      <Field label="メインカラー" required>
+      <Field label="使いたい色（例：ピンク系・青系・ブランドカラーなど）" required>
         <input className="inp" type="text" placeholder="例：ラベンダーパープル・#E8D5FF・ホワイトベース" value={f.mainColor} onChange={e => set({ mainColor: e.target.value })} />
       </Field>
-      <Field label="使いたくない色">
+      <Field label="使いたくない色があれば（任意）">
         <input className="inp" type="text" placeholder="例：赤・黒・原色系" value={f.avoidColor} onChange={e => set({ avoidColor: e.target.value })} />
       </Field>
-      <Field label="フォント" required>
+      <Field label="文字のスタイル（迷ったらAIにおまかせでOK）" required>
         <Chips options={FONT_OPTIONS} selected={f.font} onToggle={v => set({ font: single(f.font, v) })} />
       </Field>
-      <Field label="文字の見せ方" required>
+      <Field label="文字のレイアウト（迷ったらAIにおまかせでOK）" required>
         <Chips options={TEXT_STYLE_OPTIONS} selected={f.textStyle} onToggle={v => set({ textStyle: single(f.textStyle, v) })} />
       </Field>
       <Field label="画像に人物を入れるか">
@@ -275,13 +291,13 @@ function Step4({ f, set, onGenerate, prompt, canGen }) {
           {PERSON_OPTIONS.map(o => <option key={o}>{o}</option>)}
         </select>
       </Field>
-      <Field label="参考デザインURL・説明">
+      <Field label="参考にしたいデザインのURL・イメージ（任意）">
         <input className="inp" type="text" placeholder="例：https://... / ミニマルで白基調のECサイト風" value={f.referenceUrl} onChange={e => set({ referenceUrl: e.target.value })} />
         <p style={{fontSize: '13px', color: '#8B6F5E', marginTop: '8px', lineHeight: '1.6', padding: '10px 12px', background: '#FFF0E8', borderRadius: '8px', borderLeft: '3px solid #FF9969'}}>
           💡 プロンプト生成後、参考画像をChatGPTまたはGeminiにも一緒にアップロードすると、より精度の高い画像が生成されます。
         </p>
       </Field>
-      <Field label="避けたいデザイン">
+      <Field label="こんなデザインは嫌、というものがあれば（任意）">
         <input className="inp" type="text" placeholder="例：賑やかすぎる・ポップすぎる・文字が多すぎる" value={f.avoidDesign} onChange={e => set({ avoidDesign: e.target.value })} />
       </Field>
 
