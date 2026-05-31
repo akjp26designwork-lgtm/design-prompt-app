@@ -164,7 +164,7 @@ function Step1({ f, set }) {
         <Chips options={PLACEMENT_OPTIONS} selected={f.placement} onToggle={v => set({ placement: single(f.placement, v) })} />
       </Field>
       <Field label="デザインのサイズ">
-        <input className="inp" type="text" placeholder="例：1080×1080px、A4縦" value={f.size} onChange={e => set({ size: e.target.value })} />
+        <input className="inp" type="text" placeholder="例：縦1080px　横1080px" value={f.size} onChange={e => set({ size: e.target.value })} />
       </Field>
       <Field label="ファイル形式">
         <select className="sel" value={f.format} onChange={e => set({ format: e.target.value })}>
