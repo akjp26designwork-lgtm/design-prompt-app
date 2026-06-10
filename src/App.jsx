@@ -236,7 +236,7 @@ function Step1({ f, set }) {
         <Chips options={PURPOSE_OPTIONS} selected={f.purpose} onToggle={v => set({ purpose: single(f.purpose, v) })} />
       </Field>
       <Field label="どこに載せますか？" required>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="placement-cards" style={{ display: 'flex', gap: '8px' }}>
           {PLACEMENT_CARDS.map(card => {
             const isSelected = f.placement.includes(card.label)
             return (

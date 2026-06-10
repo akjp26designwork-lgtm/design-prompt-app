@@ -491,3 +491,76 @@
   .tool-links { flex-direction: column; }
   .tool-link { min-width: unset; }
 }
+
+@media (max-width: 480px) {
+  /* ── Header ── */
+  .hdr {
+    padding: 18px 12px 16px;
+  }
+  .hdr-title {
+    font-size: 1.05rem;
+    letter-spacing: 0;
+    white-space: normal;
+  }
+  .hdr-sub {
+    font-size: 0.78rem;
+  }
+
+  /* ── Main / Card ── */
+  .main {
+    padding: 16px 10px 40px;
+    box-sizing: border-box;
+  }
+  .card {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  /* ── Body ── */
+  .body {
+    padding: 16px 12px 24px;
+    box-sizing: border-box;
+  }
+
+  /* ── Placement Cards: 2×2 grid ── */
+  .placement-cards {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .placement-cards > button {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  /* ── Purpose Chips: flex-wrap ── */
+  .chips {
+    flex-wrap: wrap;
+  }
+  .chip {
+    flex: 0 0 auto;
+    white-space: normal;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+  }
+
+  /* ── Inputs ── */
+  .inp,
+  .sel {
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  /* ── Nav Buttons ── */
+  .nav-row {
+    margin-top: 24px;
+    padding-top: 16px;
+    gap: 8px;
+  }
+  .btn-sec,
+  .btn-pri {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+  }
+}
