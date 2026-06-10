@@ -11,21 +11,25 @@ const PLACEMENT_OPTIONS = [
 const MOOD_OPTIONS = [
   'シンプル・すっきり', '高級感・おしゃれ', '親しみやすい・やさしい', '力強い・インパクト重視', 'ナチュラル・やわらか',
 ]
-const FONT_OPTIONS = [
-  '明朝・セリフ系', 'ゴシック・サンセリフ系', '丸ゴシック系', '太め・インパクト重視', '手書き・筆記体風', 'AIにおまかせ',
-]
 const TEXT_STYLE_OPTIONS = [
   'キャッチコピーを超大きく', '見出し大きめ・バランスよく', '文字複数・情報量多め', '文字少なく・ビジュアル重視', 'AIにおまかせ',
 ]
-const PERSON_OPTIONS = ['入れる（男性）', '入れる（女性）', '入れる（性別問わず）', '入れない', 'AIにおまかせ']
+const FONT_CARDS = [
+  { label: '上品で落ち着いた感じ', sample: '洗練された文字', style: { fontFamily: "'Hiragino Mincho ProN', serif" } },
+  { label: 'スッキリ・スマートな感じ', sample: 'すっきりした文字', style: { fontFamily: "'Hiragino Kaku Gothic ProN', sans-serif" } },
+  { label: '丸くてやさしい・かわいい感じ', sample: 'やさしい文字', style: { fontFamily: "'Hiragino Maru Gothic ProN', sans-serif" } },
+  { label: 'ドーンと目立つ・力強い感じ', sample: '力強い文字', style: { fontFamily: 'sans-serif', fontWeight: 'bold' } },
+  { label: '手書き・温かみのある感じ', sample: '温かい文字', style: { fontFamily: "'Yuji Syuku', cursive" } },
+  { label: 'AIにおまかせ', sample: '🤖', style: {} },
+]
 
 const INIT = {
   purpose: [], placement: [], size: '', format: 'PNG（画質重視・SNSやWeb向け）',
   productName: '', serviceDescription: '', benefits: '', priceInfo: '',
-  targetAge: '', targetProblem: '', desiredFeeling: '',
+  targetAge: '', desiredFeeling: '',
   aiCopy: false, catchphrase: '', subcopy: '', cta: '', requiredText: '',
   mood: [], mainColor: '', avoidColor: '', font: [], textStyle: [],
-  includePerson: '', referenceUrl: '', avoidDesign: '',
+  includePerson: '', personImage: '', personType: '', referenceUrl: '', avoidDesign: '',
 }
 
 const STEPS = [
@@ -40,9 +44,9 @@ function single(arr, v) { return arr.includes(v) ? [] : [v] }
 
 function isValid(step, f) {
   if (step === 1) return f.purpose.length > 0 && f.placement.length > 0
-  if (step === 2) return !!(f.productName && f.serviceDescription && f.benefits && f.targetAge && f.targetProblem)
-  if (step === 3) return !!(f.cta && (f.aiCopy || f.catchphrase))
-  if (step === 4) return f.mood.length > 0 && !!f.mainColor && f.font.length > 0 && f.textStyle.length > 0
+  if (step === 2) return !!(f.productName && f.serviceDescription)
+  if (step === 3) return !!(f.aiCopy || f.catchphrase)
+  if (step === 4) return f.mood.length > 0
   return true
 }
 
@@ -63,14 +67,22 @@ function buildPrompt(f) {
 
   L.push('■ ビジュアルスタイル（最重要）')
   L.push(`・全体の雰囲気：${f.mood.join('、')}`)
-  L.push(`・メインカラー：${f.mainColor}を基調としたカラーパレット`)
+  if (f.mainColor) L.push(`・メインカラー：${f.mainColor}を基調としたカラーパレット`)
   if (f.avoidColor) L.push(`・使用禁止カラー：${f.avoidColor}`)
-  L.push(`・フォントスタイル：${f.font.join('、')}`)
-  L.push(`・文字レイアウト：${f.textStyle.join('、')}`)
-  if (f.includePerson && f.includePerson !== '入れない') {
-    L.push(`・人物：${f.includePerson}を自然な形で配置。プロのカメラマンが撮影したような高品質な写真風`)
-  } else {
-    L.push('・人物：なし。商品・サービスを象徴するビジュアル要素で構成')
+  if (f.font.length > 0) L.push(`・フォントスタイル：${f.font.join('、')}`)
+  if (f.textStyle.length > 0) L.push(`・文字レイアウト：${f.textStyle.join('、')}`)
+  if (f.includePerson === '入れない') {
+    L.push('・人物：なし')
+  } else if (f.includePerson === '入れる') {
+    if (f.personImage && f.personType) {
+      L.push(`・人物：${f.personType} / ${f.personImage}`)
+    } else if (f.personImage) {
+      L.push(`・人物：${f.personImage}`)
+    } else if (f.personType) {
+      L.push(`・人物：${f.personType}（イメージはAIにおまかせ）`)
+    } else {
+      L.push('・人物：入れる（イメージはAIにおまかせ）')
+    }
   }
   L.push('')
 
@@ -89,14 +101,14 @@ function buildPrompt(f) {
     if (f.catchphrase) L.push(`・キャッチコピー（メイン・最大フォント）：「${f.catchphrase}」`)
     if (f.subcopy) L.push(`・サブコピー：「${f.subcopy}」`)
   }
-  L.push(`・CTAボタン：「${f.cta}」を目立つボタンデザインで配置`)
+  if (f.cta) L.push(`・CTAボタン：「${f.cta}」を目立つボタンデザインで配置`)
   if (f.requiredText) L.push(`・必須テキスト：${f.requiredText}`)
   L.push('')
 
   L.push('■ 商品・サービス情報（デザインに反映）')
   L.push(`・商品名：${f.productName}`)
   L.push(`・サービス概要：${f.serviceDescription}`)
-  L.push(`・ターゲット：${f.targetAge}、悩み「${f.targetProblem}」を持つ人`)
+  L.push(`・ターゲット：${f.targetAge}`)
   L.push(`・訴求ポイント：${f.benefits}`)
   if (f.priceInfo) L.push(`・価格・実績・キャンペーン情報：${f.priceInfo}（デザインに目立つ形で含める）`)
   if (f.desiredFeeling) L.push(`・見た人に感じてほしいこと：${f.desiredFeeling}`)
@@ -154,9 +166,59 @@ function Chips({ options, selected, onToggle }) {
   )
 }
 
+function FontCards({ selected, onSelect }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      {FONT_CARDS.map(card => {
+        const isSelected = selected.includes(card.label)
+        return (
+          <button
+            key={card.label}
+            type="button"
+            onClick={() => onSelect(card.label)}
+            style={{
+              width: 'calc(33.333% - 6px)',
+              border: `2px solid ${isSelected ? '#FF9969' : '#E0D8D3'}`,
+              borderRadius: '10px',
+              padding: '12px 8px 10px',
+              background: isSelected ? '#FFF0E8' : '#fff',
+              cursor: 'pointer',
+              textAlign: 'center',
+              transition: 'all 0.15s',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <div style={{
+              fontSize: card.sample === '🤖' ? '28px' : '16px',
+              lineHeight: 1.4,
+              ...card.style,
+            }}>
+              {card.sample}
+            </div>
+            <div style={{ fontSize: '11px', color: '#666', lineHeight: 1.4 }}>
+              {card.label}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+const PLACEMENT_CARDS = [
+  { label: 'Instagram', icon: '📱', desc: '投稿', size: '1080×1350' },
+  { label: 'LINE', icon: '💬', desc: 'トーク画面', size: '1080×1920' },
+  { label: 'X（Twitter）', icon: '🐦', desc: '投稿', size: '1200×675' },
+  { label: 'チラシ・印刷物', icon: '📄', desc: 'A4縦', size: '210×297mm' },
+]
+
 function Step1({ f, set }) {
   const PLACEMENT_SIZE = {
-    'Instagram': '正方形：1080px ×1350px',
+    'Instagram': '正方形：1080px × 1350px',
     'LINE': '縦長：1080px × 1920px',
     'X（Twitter）': '横長：1200px × 675px',
     'チラシ・印刷物': 'A4サイズ（210mm × 297mm）',
@@ -174,7 +236,37 @@ function Step1({ f, set }) {
         <Chips options={PURPOSE_OPTIONS} selected={f.purpose} onToggle={v => set({ purpose: single(f.purpose, v) })} />
       </Field>
       <Field label="どこに載せますか？" required>
-        <Chips options={PLACEMENT_OPTIONS} selected={f.placement} onToggle={handlePlacementToggle} />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {PLACEMENT_CARDS.map(card => {
+            const isSelected = f.placement.includes(card.label)
+            return (
+              <button
+                key={card.label}
+                type="button"
+                onClick={() => handlePlacementToggle(card.label)}
+                style={{
+                  flex: 1,
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  border: `2px solid ${isSelected ? '#FF9969' : '#E0D8D3'}`,
+                  background: isSelected ? '#FFF0E8' : '#fff',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.15s',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span style={{ fontSize: '28px', lineHeight: 1 }}>{card.icon}</span>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: isSelected ? '#FF7043' : '#333' }}>{card.label}</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>{card.desc}</span>
+                <span style={{ fontSize: '11px', color: '#888' }}>{card.size}</span>
+              </button>
+            )
+          })}
+        </div>
       </Field>
       <Field label="デザインのサイズ">
         <input className="inp" type="text" placeholder="例：縦1080px　横1080px" value={f.size} onChange={e => set({ size: e.target.value })} />
@@ -199,22 +291,19 @@ function Step2({ f, set }) {
       <Field label="商品名・サービス名" required>
         <input className="inp" type="text" placeholder="例：鈴木整骨院・ハンドメイドアクセサリーBOXY" value={f.productName} onChange={e => set({ productName: e.target.value })} />
       </Field>
-      <Field label="どんなお店・サービスですか？（一言で）" required>
+      <Field label="何を売っている・やっているお店ですか？" required>
         <input className="inp" type="text" placeholder="例：毎日使える保湿スキンケアセット" value={f.serviceDescription} onChange={e => set({ serviceDescription: e.target.value })} />
       </Field>
-      <Field label="お客さんにどんないいことがありますか？" required>
+      <Field label="あなたのお店を使うと、お客さんはどうなりますか？どんな悩みを解決できますか？">
         <textarea className="inp ta" rows={3} placeholder="例：乾燥が改善され、肌がもちもちになる。毎朝のスキンケアが楽しくなる" value={f.benefits} onChange={e => set({ benefits: e.target.value })} />
       </Field>
       <Field label="価格・実績・キャンペーン（あれば）">
         <input className="inp" type="text" placeholder="例：初回限定50%OFF・累計10万個販売" value={f.priceInfo} onChange={e => set({ priceInfo: e.target.value })} />
       </Field>
-      <Field label="どんな人に届けたいですか？（年齢・性別など）" required>
+      <Field label="どんな人に見てほしいですか？（例：30代の女性・近所の主婦など）">
         <input className="inp" type="text" placeholder="例：30〜40代女性" value={f.targetAge} onChange={e => set({ targetAge: e.target.value })} />
       </Field>
-      <Field label="その人はどんな悩みを持っていますか？" required>
-        <input className="inp" type="text" placeholder="例：乾燥・毛穴の開き・くすみが気になる" value={f.targetProblem} onChange={e => set({ targetProblem: e.target.value })} />
-      </Field>
-      <Field label="デザインを見た人にどう感じてほしいですか？（任意）">
+      <Field label="見た人に「どう思ってほしい」ですか？（例：行ってみたい！安心できそう）">
         <input className="inp" type="text" placeholder="例：試してみたい！自分も使えばよかった" value={f.desiredFeeling} onChange={e => set({ desiredFeeling: e.target.value })} />
       </Field>
     </div>
@@ -249,10 +338,10 @@ function Step3({ f, set }) {
           value={f.subcopy} disabled={f.aiCopy}
           onChange={e => set({ subcopy: e.target.value })} />
       </Field>
-      <Field label="行動を促す言葉（例：今すぐ予約・詳しくはこちら）" required>
+      <Field label="最後に背中を押す一言（任意）">
         <input className="inp" type="text" placeholder="例：今すぐ試す・詳しくはこちら・無料で相談する" value={f.cta} onChange={e => set({ cta: e.target.value })} />
       </Field>
-      <Field label="必ず載せたい情報（住所・電話番号など）（任意）">
+      <Field label="絶対に載せたい情報（住所・電話番号など）（任意）">
         <input className="inp" type="text" placeholder="例：公式サイトURL・ハッシュタグ・注意書き" value={f.requiredText} onChange={e => set({ requiredText: e.target.value })} />
       </Field>
     </div>
@@ -273,23 +362,70 @@ function Step4({ f, set, onGenerate, prompt, canGen }) {
       <Field label="どんな雰囲気にしたいですか？" required>
         <Chips options={MOOD_OPTIONS} selected={f.mood} onToggle={v => set({ mood: single(f.mood, v) })} />
       </Field>
-      <Field label="使いたい色（例：ピンク系・青系・ブランドカラーなど）" required>
+      <Field label="使いたい色はありますか？（任意）">
         <input className="inp" type="text" placeholder="例：ラベンダーパープル・#E8D5FF・ホワイトベース" value={f.mainColor} onChange={e => set({ mainColor: e.target.value })} />
       </Field>
-      <Field label="使いたくない色があれば（任意）">
+      <Field label="使いたくない色はありますか？（任意）">
         <input className="inp" type="text" placeholder="例：赤・黒・原色系" value={f.avoidColor} onChange={e => set({ avoidColor: e.target.value })} />
       </Field>
-      <Field label="文字のスタイル（迷ったらAIにおまかせでOK）" required>
-        <Chips options={FONT_OPTIONS} selected={f.font} onToggle={v => set({ font: single(f.font, v) })} />
+      <Field label="文字のデザイン（任意・迷ったらAIにおまかせ）">
+        <FontCards selected={f.font} onSelect={v => set({ font: single(f.font, v) })} />
       </Field>
-      <Field label="文字のレイアウト（迷ったらAIにおまかせでOK）" required>
+      <Field label="文字の見せ方（任意・迷ったらAIにおまかせ）">
         <Chips options={TEXT_STYLE_OPTIONS} selected={f.textStyle} onToggle={v => set({ textStyle: single(f.textStyle, v) })} />
       </Field>
       <Field label="画像に人物を入れるか">
-        <select className="sel" value={f.includePerson} onChange={e => set({ includePerson: e.target.value })}>
-          <option value="">選択してください</option>
-          {PERSON_OPTIONS.map(o => <option key={o}>{o}</option>)}
-        </select>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: f.includePerson === '入れる' ? '12px' : '0' }}>
+          {['入れない', '入れる'].map(opt => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => set({ includePerson: opt })}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '8px',
+                border: `2px solid ${f.includePerson === opt ? '#FF9969' : '#E0D8D3'}`,
+                background: f.includePerson === opt ? '#FFF0E8' : '#fff',
+                color: f.includePerson === opt ? '#FF7043' : '#888',
+                fontWeight: f.includePerson === opt ? '600' : 'normal',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.15s',
+              }}
+            >{opt}</button>
+          ))}
+        </div>
+        {f.includePerson === '入れる' && (
+          <div>
+            <label style={{ fontSize: '13px', color: '#8B6F5E', display: 'block', marginBottom: '6px' }}>
+              人物のタイプ（任意）
+            </label>
+            <select
+              className="sel"
+              value={f.personType}
+              onChange={e => set({ personType: e.target.value })}
+            >
+              <option value="">選択してください</option>
+              <option>女性</option>
+              <option>男性</option>
+              <option>性別問わず</option>
+              <option>子ども</option>
+              <option>家族・グループ</option>
+              <option>AIにおまかせ</option>
+            </select>
+            <label style={{ fontSize: '13px', color: '#8B6F5E', display: 'block', marginTop: '12px', marginBottom: '6px' }}>
+              どんな人物のイメージですか？（任意）
+            </label>
+            <input
+              className="inp"
+              type="text"
+              placeholder="例：マッサージを受けている30代女性・笑顔で接客している女性スタッフ"
+              value={f.personImage}
+              onChange={e => set({ personImage: e.target.value })}
+            />
+          </div>
+        )}
       </Field>
       <Field label="参考にしたいデザインのURL・イメージ（任意）">
         <input className="inp" type="text" placeholder="例：https://... / ミニマルで白基調のECサイト風" value={f.referenceUrl} onChange={e => set({ referenceUrl: e.target.value })} />
@@ -297,7 +433,7 @@ function Step4({ f, set, onGenerate, prompt, canGen }) {
           💡 プロンプト生成後、参考画像をChatGPTまたはGeminiにも一緒にアップロードすると、より精度の高い画像が生成されます。
         </p>
       </Field>
-      <Field label="こんなデザインは嫌、というものがあれば（任意）">
+      <Field label="「こんなデザインは嫌だ」というものがあれば（任意）">
         <input className="inp" type="text" placeholder="例：賑やかすぎる・ポップすぎる・文字が多すぎる" value={f.avoidDesign} onChange={e => set({ avoidDesign: e.target.value })} />
       </Field>
 
@@ -310,7 +446,7 @@ function Step4({ f, set, onGenerate, prompt, canGen }) {
         ✨ プロンプトを生成する
       </button>
       {!canGen && (
-        <p className="gen-hint">雰囲気・メインカラー・フォント・文字の見せ方を選択してください</p>
+        <p className="gen-hint">雰囲気を選択してください</p>
       )}
 
       {prompt && (
@@ -358,7 +494,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="hdr">
-        <h1 className="hdr-title">✏️ デザインプロンプトジェネレーター</h1>
+        <h1 className="hdr-title">自分で作る！かんたん広告デザイン作成ツール</h1>
         <p className="hdr-sub">AI画像生成ツール用のプロンプトを4ステップで作成</p>
       </header>
 
